@@ -1,0 +1,93 @@
+:root.silk { color-scheme:light; background:var(--env-base); transition:color .75s,background-color .9s; }
+.silk body { background:var(--env-base); color:var(--ink); transition:background-color 1.15s,color .75s; }
+.silk .app { isolation:isolate; }
+.silk .silk-environment { position:fixed; inset:0; z-index:-1; pointer-events:none; overflow:hidden; }
+.silk .environment-wash { position:absolute; inset:-12%; background-size:cover; background-position:center; opacity:.16; filter:blur(56px) saturate(.55); animation:environment-arrival 1.4s ease-out both; mask-image:linear-gradient(transparent,#000 22%,#000 75%,transparent); }
+.silk .environment-light { position:absolute; inset:0; background:radial-gradient(ellipse at var(--light-x,60%) var(--light-y,30%),var(--env-light),transparent 68%); opacity:var(--light-strength,.24); transition:background-position 1.2s; }
+.silk .environment-texture { position:absolute; inset:0; opacity:.14; background:repeating-linear-gradient(88deg,transparent 0 3px,#7b6c5320 3px 4px),repeating-linear-gradient(0deg,transparent 0 4px,#eee4ce20 4px 5px); }
+.silk .environment-mist { position:absolute; width:120%; left:-10%; top:30%; opacity:.1; mask-image:linear-gradient(transparent,#000 30%,#000 65%,transparent); animation:mist-settle 5s ease-out both; }
+.silk .environment-mist img { width:100%; height:auto; filter:blur(3px); }
+.silk .silk-environment[data-paused=true] * { animation:none; }
+.silk .site-header { color:var(--ink); height:90px; }
+.silk .site-header nav { color:var(--ink); }
+.silk .site-header nav button:last-child { border-color:transparent; background:color-mix(in srgb,var(--ink) 5%,transparent); }
+.silk .site-header nav button:hover { color:var(--ink); background:color-mix(in srgb,var(--ink) 9%,transparent); }
+.silk .demo-picker select { color:var(--accent,var(--gold)); border-color:transparent; }
+.silk .demo-picker option { background:var(--paper); }
+.silk .reader { padding-top:28px; }
+.silk .chapter-heading { min-height:112px; }
+.silk .chapter-title { color:var(--ink); text-shadow:0 1px 16px color-mix(in srgb,var(--env-light) 35%,transparent); }
+.silk .chapter-number { color:var(--gold); }
+.silk .chapter-heading>p { color:var(--muted); }
+.silk .scene-excerpt { color:var(--gold); animation:poem-arrive var(--arrival-time,1.3s) cubic-bezier(.2,.7,.3,1) both; }
+.silk .art-stage { overflow:hidden; border-radius:0; background:none; box-shadow:none; }
+.silk .art-stage::before { display:none; }
+.silk .painting,.silk .art-effects { border-radius:0; box-shadow:none; mask-image:url('/materials/silk-edge.png'); mask-size:100% 100%; mask-repeat:no-repeat; }
+.silk .painting { transition:opacity .45s,transform .8s cubic-bezier(.2,.7,.3,1); }
+.silk .reader[data-fold] .painting,.silk .reader[data-fold] .art-effects { mask-image:none; border-radius:4px; }
+.silk .reader[data-fold] .painting { outline:3px solid #e7dcc3; outline-offset:-2px; box-shadow:0 12px 28px -18px #17272060; }
+.silk .reader[data-fold] .depth-art { transition:opacity .14s; }
+.silk .art-effects,.silk .depth-art { transition:opacity .45s,transform .8s cubic-bezier(.2,.7,.3,1); }
+.silk .artwork[data-exploring=true] .painting,.silk .artwork[data-exploring=true] .art-effects,.silk .artwork[data-exploring=true] .depth-art { transform:scale(1.18) translateX(var(--pan)); }
+.silk .scene-arrival { animation:silk-arrive var(--arrival-time,1.3s) cubic-bezier(.2,.7,.3,1) both; }
+.silk figcaption { padding-left:18px; padding-right:18px; color:var(--muted); }
+.silk .scroll-exploration { display:flex; justify-content:center; align-items:center; gap:20px; color:var(--muted); font-size:11px; padding-top:4px; }
+.silk .scroll-exploration input { width:min(240px,30vw); accent-color:var(--gold); cursor:ew-resize; min-height:44px; }
+.silk .scroll-exploration button { color:var(--gold); font-size:11px; }
+.silk .reading-section { max-width:1000px; gap:50px; padding-top:50px; }
+.silk .original-text { color:var(--ink); }
+.silk .reading-notes { border-top-color:color-mix(in srgb,var(--muted) 25%,transparent); }
+.silk .notes-content,.silk .preface-context { color:var(--ink); }
+.silk .notes-content h3,.silk .notes-content dt { color:var(--gold); }
+.silk .reading-footer { border:0; background:var(--env-base); backdrop-filter:none; transition:background-color 1s; }
+.silk .page-nav>button,.silk .page-nav>button.next-action { border-color:transparent; background:color-mix(in srgb,var(--ink) 5%,transparent); color:var(--ink); transition:transform .35s cubic-bezier(.2,.8,.3,1.12),background-color .3s; }
+.silk .page-nav>button:hover { transform:translateY(-2px); background:color-mix(in srgb,var(--ink) 9%,transparent); }
+.silk button:active { transform:scale(.97); }
+.silk .page-counter { color:var(--ink); }
+.silk .page-marks button span { background:color-mix(in srgb,var(--ink) 24%,transparent); }
+.silk .page-marks button.is-current span { background:var(--gold); }
+.silk .page-marks button:active { transform:none; }
+.silk .jade-hotspot:active { transform:translate(-50%,-50%); }
+.silk dialog { background:var(--paper); color:var(--ink); border:0; border-radius:12px; box-shadow:0 30px 100px #102b252b; }
+.silk dialog::backdrop { background:color-mix(in srgb,var(--env-base) 66%,#1b2a2550); backdrop-filter:blur(9px); }
+.silk .contents-item { box-shadow:none; border-radius:0; }
+.silk .contents-item>img { border-radius:0; mask-image:url('/materials/silk-edge.png'); mask-size:100% 100%; }
+.silk .contents-item.is-current { box-shadow:none; background:color-mix(in srgb,var(--ink) 5%,transparent); }
+.silk .detail-vignette { grid-column:10/-1; grid-row:3; display:grid; gap:4px; margin:15px 12px 0; padding:0; max-width:220px; align-self:start; color:var(--gold); font-size:12px; letter-spacing:.15em; }
+.silk .vignette-picture { display:block; aspect-ratio:1.6; background-size:340%; mask-image:radial-gradient(ellipse,#000 35%,#0009 58%,transparent 73%); }
+.silk .primary-action { background:var(--gold); color:var(--paper); border:0; }
+.silk .primary-action:hover { background:var(--ink); color:var(--paper); }
+.silk .scroll-mask__stage,.silk .opening-underlay img { border-radius:0; }
+.silk .opening-underlay img { mask-image:url('/materials/silk-edge.png'); mask-size:100% 100%; }
+.silk .mist-transition { position:fixed; inset:0; z-index:24; pointer-events:none; opacity:0; }
+.silk .mist-transition>div { position:absolute; inset:-20%; mask-image:url('/materials/silk-edge.png'); mask-size:100% 100%; filter:blur(22px); }
+.silk .mist-transition.is-crossing { animation:chapter-mist 1.15s cubic-bezier(.2,.7,.3,1) both; }
+@keyframes chapter-mist { 0%{opacity:.88;transform:translateX(-12%) scale(1.2)} 35%{opacity:.7} 100%{opacity:0;transform:translateX(8%) scale(1.3)} }
+@keyframes silk-arrive { 0%{opacity:.05;transform:translateY(10px) scale(.975)} 75%{opacity:1;transform:translateY(-1px) scale(1.003)} 100%{opacity:1;transform:none} }
+@keyframes poem-arrive { 0%,22%{opacity:.12;transform:translateY(9px)} 100%{opacity:1;transform:none} }
+@keyframes environment-arrival { from{opacity:0} to{opacity:.16} }
+@keyframes mist-settle { from{opacity:0;transform:translateX(-1.5%)} to{opacity:.1;transform:none} }
+@media(min-width:641px) {
+  .silk .reader[data-scene="5"] .scene-excerpt,.silk .reader[data-scene="6"] .scene-excerpt { grid-column:2/10; padding-left:24px; text-align:left; }
+  .silk .reader[data-layout=landscape] .chapter-title { font-size:54px; }
+}
+@media(max-width:640px) {
+  .silk .site-header { height:116px; }
+  .silk .reader { padding-top:12px; }
+  .silk .reader .chapter-heading { min-height:102px; }
+  .silk .scene-excerpt { animation-duration:1.1s; }
+  .silk .reading-section { padding:30px 6px 0; }
+  .silk figcaption { padding-left:4px; padding-right:4px; }
+  .silk .scroll-exploration { gap:8px; }
+  .silk .scroll-exploration input { width:35vw; }
+  .silk .detail-vignette { order:4; width:180px; margin:16px 0 0 auto; font-size:11px; }
+  .silk .environment-wash { filter:blur(32px) saturate(.55); }
+  .silk .environment-mist { top:22%; }
+  .silk .reading-footer { padding:10px 16px max(10px,env(safe-area-inset-bottom)); }
+}
+@media(prefers-reduced-motion:reduce) {
+  .silk *, .silk *::before,.silk *::after { animation:none !important;transition:none !important; }
+  .silk .mist-transition { display:none; }
+  .silk .scene-excerpt { opacity:1; }
+}
+.silk[data-quiet=true], .silk[data-quiet=true] *, .silk[data-quiet=true] *::before, .silk[data-quiet=true] *::after { animation:none !important;transition:none !important; }

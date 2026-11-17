@@ -1,0 +1,145 @@
+/* 青绿展馆 · visual draft. The original edition remains in styles.css. */
+:root.gallery {
+  --paper:#102623; --ink:#eee4d0; --green:#c6b184; --red:#e1a38d;
+  --line:#3b5148; --muted:#aeb9aa; --gold:#c6b184;
+  color-scheme:dark;
+}
+.gallery body { min-height:100svh; background:radial-gradient(ellipse at 50% 0,#28483e 0,transparent 780px),var(--paper); }
+.gallery button { transition:color .2s,background-color .2s,border-color .2s; }
+.gallery button:hover { color:var(--ink); }
+.gallery button:active { background:rgba(198,177,132,.12); }
+.gallery button:disabled { color:var(--muted); }
+.gallery .site-header { height:82px; width:calc(100% - 112px); border-bottom:0; }
+.gallery .brand { gap:15px; font-size:24px; letter-spacing:.22em; }
+.gallery .seal { background:#914c3b; border-color:#b66d55; color:#f4dfc1; width:29px; height:35px; padding-top:4px; line-height:13px; }
+.gallery .header-caption { color:var(--muted); letter-spacing:.36em; font-size:11px; }
+.gallery .site-header nav { gap:24px; color:var(--muted); }
+.gallery .site-header nav button:last-child { border-bottom:1px solid var(--gold); padding-right:8px; }
+.gallery .is-opening .site-header { left:56px; right:56px; width:auto; }
+.gallery .scroll-mask { background:transparent !important; }
+.gallery .scroll-mask__pin { padding:82px 28px 130px; }
+.gallery .scroll-mask__stage { max-width:1800px; }
+.gallery .opening-underlay img {
+  mask-image:linear-gradient(to right,transparent,#000 5%,#000 95%,transparent),linear-gradient(to bottom,transparent,#000 7%,#000 91%,transparent);
+}
+.gallery .opening-actions { left:56px; right:56px; bottom:32px; gap:32px; }
+.gallery .opening-actions p { font-family:'KaiTi','STKaiti',serif; font-size:28px; letter-spacing:.18em; }
+.gallery .opening-actions>div { gap:24px; }
+.gallery .opening-hint { font-size:12px; }
+.gallery .primary-action { min-width:184px; min-height:54px; background:var(--gold); border-color:var(--gold); color:#102623; font-size:16px; padding:14px 26px; }
+.gallery .primary-action:hover { background:#e5d2aa; border-color:#e5d2aa; color:#102623; }
+.gallery .opening-colophon { letter-spacing:.25em; }
+.gallery .reader { width:calc(100% - 128px); max-width:1744px; padding-bottom:156px; }
+.gallery .chapter-heading { padding:24px 0 32px; min-height:148px; align-items:center; }
+.gallery .chapter-heading>div { gap:32px; }
+.gallery .chapter-number { font-size:44px; color:var(--gold); font-weight:400; line-height:1; border-right:1px solid var(--line); padding-right:28px; }
+.gallery .chapter-number span { display:block; margin:12px 0 0; font-size:11px; letter-spacing:.16em; }
+.gallery .chapter-title { font-size:clamp(48px,4.8vw,76px); letter-spacing:.18em; line-height:1.2; }
+.gallery .chapter-heading>p { color:var(--gold); font-size:14px; letter-spacing:.25em; margin:0; }
+.gallery .artwork { margin:0 -36px; }
+.gallery .art-stage { background:#203c34; outline:1px solid var(--line); outline-offset:6px; box-shadow:0 24px 70px rgba(0,0,0,.28); }
+.gallery figcaption { min-height:60px; border-bottom:0; padding:0 12px; color:var(--muted); }
+.gallery figcaption .text-action { color:var(--gold); letter-spacing:.1em; }
+.gallery .guide-controls { padding:8px 0; border-bottom:0; }
+.gallery .guide-controls button[aria-pressed=true] { color:var(--gold); }
+.gallery .reading-section { max-width:1184px; margin:0 auto; gap:88px; grid-template-columns:280px minmax(0,1fr); padding:56px 0 0; }
+.gallery .section-kicker { color:var(--gold); font-size:12px; letter-spacing:.23em; }
+.gallery .reading-aside { padding-top:5px; }
+.gallery .reading-aside blockquote { writing-mode:vertical-rl; text-orientation:upright; max-height:330px; font-family:'KaiTi','STKaiti',serif; font-size:29px; letter-spacing:.13em; line-height:1.8; margin:30px 0 28px; color:var(--gold); }
+.gallery .reading-aside blockquote p { margin:0 0 0 12px; }
+.gallery .text-author { font-size:12px; letter-spacing:.1em; }
+.gallery .scene-mood { font-size:23px; color:var(--gold); }
+.gallery .original-text { font-size:21px; line-height:2.15; letter-spacing:.06em; }
+.gallery .original-text p { opacity:1; margin-bottom:28px; }
+.gallery .original-text.is-short { font-size:32px; line-height:2; }
+.gallery .reading-notes { margin-top:36px; }
+.gallery .reading-notes summary { min-height:66px; color:var(--gold); letter-spacing:.16em; }
+.gallery .notes-content,.gallery .preface-context { color:#c3ccbc; }
+.gallery .notes-content h3,.gallery .notes-content dt { color:var(--ink); }
+.gallery .ending-note { margin-top:64px; color:var(--gold); font-size:16px; }
+.gallery .reading-footer { background:rgba(16,38,35,.96); backdrop-filter:blur(12px); border-top-color:var(--line); padding:12px 56px max(12px,env(safe-area-inset-bottom)); }
+.gallery .page-nav { max-width:1744px; }
+.gallery .page-nav>button { font-size:15px; letter-spacing:.23em; }
+.gallery .page-nav>button.next-action { color:var(--gold); }
+.gallery .page-counter { color:var(--gold); }
+.gallery .page-marks button { width:26px; }
+.gallery .page-marks button span { background:#516457; }
+.gallery .page-marks button.is-current span { background:var(--gold); width:18px; }
+.gallery dialog { background:#142e29; border-color:var(--line); padding:32px 40px; }
+.gallery dialog::backdrop { background:rgba(3,15,12,.8); backdrop-filter:blur(6px); }
+.gallery .dialog-top { padding-bottom:24px; border-bottom:0; }
+.gallery .dialog-top h2 { font-family:'KaiTi','STKaiti',serif; font-size:40px; margin-top:10px; }
+.gallery .dialog-top>button { color:var(--muted); }
+.gallery #contents-dialog { width:min(1240px,calc(100% - 64px)); }
+.gallery .contents-list { gap:28px 32px; }
+.gallery .contents-item { grid-template-columns:1fr auto; padding:0 0 20px; gap:18px 12px; border-bottom-color:var(--line); }
+.gallery .contents-item>img { grid-column:1 / -1; width:100%; height:auto; transition:opacity .2s; }
+.gallery .contents-item:hover>img { opacity:.84; }
+.gallery .contents-item>span:not(.contents-arrow) { display:grid; grid-template-columns:28px 1fr; gap:8px 12px; align-items:center; }
+.gallery .contents-item strong { font-family:'KaiTi','STKaiti',serif; font-size:26px; letter-spacing:.13em; }
+.gallery .contents-item small { color:var(--gold); }
+.gallery .contents-item em { grid-column:2; font-size:12px; letter-spacing:.06em; }
+.gallery .contents-item.is-current strong,.gallery .contents-item.is-current small { color:var(--gold); }
+.gallery .contents-arrow { display:block; color:var(--gold); }
+.gallery .preface-original { line-height:2.1; }
+.gallery .detail-dialog .dialog-top h2 { font-size:30px; }
+@media (max-width:1000px) {
+  .gallery .site-header { width:calc(100% - 64px); }
+  .gallery .is-opening .site-header { left:32px; right:32px; }
+  .gallery .reader { width:calc(100% - 72px); }
+  .gallery .artwork { margin:0 -16px; }
+  .gallery .chapter-heading { gap:20px; }
+  .gallery .chapter-heading>div { gap:24px; }
+  .gallery .chapter-title { font-size:48px; }
+  .gallery .chapter-heading>p { font-size:12px; }
+  .gallery .reading-section { grid-template-columns:190px minmax(0,1fr); gap:44px; }
+  .gallery .reading-aside blockquote { font-size:25px; }
+  .gallery .opening-actions { left:32px; right:32px; }
+  .gallery .opening-actions p { font-size:23px; }
+  .gallery .reading-footer { padding-left:32px; padding-right:32px; }
+}
+@media (max-width:640px) {
+  .gallery .site-header { width:calc(100% - 40px); height:76px; }
+  .gallery .is-opening .site-header { left:20px; right:20px; }
+  .gallery .brand { font-size:19px; gap:10px; letter-spacing:.12em; }
+  .gallery .seal { width:25px; height:31px; padding-top:2px; }
+  .gallery .site-header nav { gap:2px; }
+  .gallery .site-header nav button:last-child { padding-right:6px; }
+  .gallery .scroll-mask__pin { padding:92px 0 226px; }
+  .gallery .opening-actions { bottom:38px; left:20px; right:20px; gap:20px; }
+  .gallery .opening-actions p { font-size:25px; }
+  .gallery .opening-actions>div { gap:16px; }
+  .gallery .opening-colophon { font-size:11px; }
+  .gallery .reader { width:calc(100% - 40px); padding-bottom:128px; }
+  .gallery .chapter-heading { min-height:130px; padding:22px 0 26px; gap:14px; }
+  .gallery .chapter-heading>div { gap:18px; }
+  .gallery .chapter-number { font-size:29px; padding-right:16px; }
+  .gallery .chapter-number span { font-size:10px; margin-top:8px; }
+  .gallery .chapter-title { font-size:clamp(32px,9vw,44px); letter-spacing:.1em; }
+  .gallery .chapter-heading>p { font-size:12px; letter-spacing:.16em; }
+  .gallery .artwork { margin:0 -10px; }
+  .gallery .art-stage { outline-offset:4px; }
+  .gallery figcaption { padding:0 2px; min-height:54px; gap:8px; }
+  .gallery .text-action { font-size:11px; }
+  .gallery .reading-section { display:block; padding:30px 4px 0; }
+  .gallery .reading-aside { margin:0 0 22px; padding:0; }
+  .gallery .reading-aside blockquote,.gallery .reading-aside .text-author,.gallery .reading-aside .scene-mood { display:none; }
+  .gallery .original-text { font-size:18px; letter-spacing:.045em; line-height:2.15; }
+  .gallery .original-text.is-short { font-size:24px; }
+  .gallery .original-text p { margin-bottom:24px; }
+  .gallery .reading-notes { margin-top:28px; }
+  .gallery .reading-notes summary { min-height:60px; }
+  .gallery .reading-footer { padding:12px 20px max(12px,env(safe-area-inset-bottom)); }
+  .gallery .page-nav>button { font-size:14px; letter-spacing:.08em; }
+  .gallery dialog,.gallery #contents-dialog { width:calc(100% - 24px); padding:20px; max-height:88svh; }
+  .gallery .dialog-top h2 { font-size:31px; }
+  .gallery .contents-list { grid-template-columns:1fr; gap:24px; }
+  .gallery .contents-item { grid-template-columns:1fr auto; padding-bottom:20px; }
+  .gallery .contents-item strong { font-size:24px; }
+  .gallery .contents-arrow { display:block !important; }
+  .gallery .detail-dialog .dialog-top h2 { font-size:26px; }
+  .gallery .ending-note { font-size:14px; margin-top:36px; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .gallery *, .gallery *::before, .gallery *::after { animation:none !important; transition:none !important; }
+}

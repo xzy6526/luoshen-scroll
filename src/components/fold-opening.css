@@ -1,0 +1,30 @@
+.fold-opening { position:relative; height:195svh; }
+.fold-pin { position:sticky; top:0; height:100svh; padding:124px 64px 156px; }
+.fold-stage { position:relative; width:100%; height:100%; }
+.fold-sheet { position:absolute; inset:0; display:grid; place-items:center; margin:0; pointer-events:none; }
+.fold-sheet--cover { z-index:2; }
+.fold-sheet--scene { z-index:1; opacity:0; }
+.fold-card { position:relative; perspective:2400px; perspective-origin:50% 50%; width:var(--cover-width,100%); }
+.fold-sheet--scene .fold-card { width:var(--scene-width,100%); }
+.fold-original { display:block; width:100%; height:auto; object-fit:contain; box-sizing:border-box; border:6px solid #e7dcc3; border-radius:4px; opacity:0; box-shadow:0 2px 0 #c4b69c,0 18px 34px -18px #071c1970; }
+.fold-halves { position:absolute; inset:0; transform-style:preserve-3d; }
+.fold-half { position:absolute; top:0; width:50%; height:100%; box-sizing:border-box; overflow:hidden; backface-visibility:hidden; background:#e7dcc3; border-top:6px solid #e7dcc3; border-bottom:6px solid #e7dcc3; box-shadow:0 10px 26px -16px #071c1980; will-change:transform; }
+.fold-half--left { left:0; transform-origin:100% 50%; transform:rotateY(var(--fold-angle,0deg)); border-left:6px solid #e7dcc3; border-radius:4px 0 0 4px; }
+.fold-half--right { right:0; transform-origin:0 50%; transform:rotateY(calc(-1 * var(--fold-angle,0deg))); border-right:6px solid #e7dcc3; border-radius:0 4px 4px 0; }
+.fold-half img { position:absolute; top:0; width:200%; height:100%; max-width:none; object-fit:fill; }
+.fold-half--left img { left:0; }
+.fold-half--right img { right:0; }
+.fold-half>span { position:absolute; inset:0; pointer-events:none; }
+.fold-half--left>span { background:linear-gradient(to right,transparent 40%,rgba(40,30,15,var(--fold-shade,0))); }
+.fold-half--right>span { background:linear-gradient(to left,transparent 40%,rgba(40,30,15,var(--fold-shade,0))); }
+.fold-sheet[data-flat=true] .fold-original { opacity:1; }
+.fold-sheet[data-flat=true] .fold-halves { opacity:0; }
+@media(max-width:1000px) { .fold-pin { padding:120px 36px 156px; } }
+@media(max-width:640px) {
+  .fold-pin { padding:148px 22px 230px; }
+  .fold-card { perspective:1100px; }
+  .fold-original { border-width:4px; }
+  .fold-half { border-top-width:4px; border-bottom-width:4px; }
+  .fold-half--left { border-left-width:4px; }
+  .fold-half--right { border-right-width:4px; }
+}

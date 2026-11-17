@@ -1,0 +1,14 @@
+/* Companion layout supplied locally; mask geometry and falloff are from the user-provided TSX. */
+.scroll-mask { position: relative; width: 100%; isolation: isolate; }
+.scroll-mask__pin { position: sticky; top: 0; width: 100%; height: 100svh; padding: 88px 40px 110px; display: grid; place-items: center; }
+.scroll-mask__stage { position: relative; width: 100%; height: 100%; max-width: 1600px; overflow: hidden; }
+.scroll-mask__veil, .scroll-mask__tiles, .scroll-mask__scrim, .opening-underlay { position: absolute; inset: 0; }
+.scroll-mask__image, .opening-underlay img { display: block; width: 100%; height: 100%; object-position: center; object-fit: contain; transform-origin: center; }
+.opening-underlay { display:grid; place-items:center; }
+.opening-underlay img { width:auto; height:auto; max-width:100%; max-height:100%; mask-image:linear-gradient(to right,transparent,#000 2.5%,#000 97.5%,transparent),linear-gradient(to bottom,transparent,#000 3%,#000 97%,transparent); mask-composite:intersect; }
+.scroll-mask__scrim { pointer-events: none; }
+.scroll-mask__tile { position: absolute; transform-origin: center; }
+.scroll-mask__content { position: absolute; inset: 0; pointer-events: none; }
+@media (max-width: 640px) {
+  .scroll-mask__pin { padding: 110px 16px 180px; }
+}

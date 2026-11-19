@@ -24,6 +24,10 @@ try{
       await page.route('**/art/02.webp',stopDownload);
       await page.goto(base+'#scene-02',{waitUntil:'domcontentloaded'});
       await checkPreview('.v3-scroll-fallback');
+      const medium=page.locator('.v3-scroll-fallback .v3-medium[data-ready=true]');
+      await medium.waitFor();
+      assert.equal(await medium.evaluate(img=>img.naturalWidth),1080);
+      assert.equal(await medium.evaluate(img=>getComputedStyle(img).opacity),'1');
       await page.getByRole('button',{name:/近观画中细节/}).click();
       await checkPreview('.v3-zoom-window');
       release();
@@ -39,6 +43,20 @@ try{
       await page.waitForURL(/scene-03$/);
       await page.waitForFunction(()=>document.querySelector('.v3-scroll-art')?.dataset.status==='ready');
       await page.waitForFunction(()=>document.querySelector('.v3-scroll-art canvas').dataset.progress==='1.0000');
+      const original=page.locator('.v3-scroll-fallback .v3-original');
+      assert.ok(await original.evaluate(img=>{
+        const box=img.getBoundingClientRect();
+        return getComputedStyle(img).opacity==='1'&&getComputedStyle(img.closest('.v3-scroll-fallback')).opacity==='1'&&
+          Math.abs(box.width/box.height-img.naturalWidth/img.naturalHeight)<.02;
+      }));
+      if(width===1280){
+        const canvas=page.locator('.v3-scroll-art canvas'),box=await canvas.boundingBox();
+        await page.waitForFunction(()=>document.querySelector('.v3-scroll-art canvas').dataset.running==='false');
+        const frame=await canvas.getAttribute('data-frame');
+        await page.mouse.move(box.x+25,box.y+60);
+        await page.mouse.move(box.x+180,box.y+60,{steps:12});
+        assert.equal(await canvas.getAttribute('data-frame'),frame);
+      }
       const colorDifference=await page.evaluate(()=>{
         const frame=document.querySelector('.v3-scroll-art canvas'),art=document.querySelector('.v3-original');
         const aspect=art.naturalWidth/art.naturalHeight;

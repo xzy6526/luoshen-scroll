@@ -1,21 +1,39 @@
-import React,{useState} from 'react';
+import React,{useEffect,useState} from 'react';
 
-const previews=import.meta.glob('./previews/*.webp',{eager:true,import:'default',query:'?inline'});
+const previews=import.meta.glob(['./previews/frame.webp','./previews/roof-*.webp'],{eager:true,import:'default',query:'?inline'});
 export const previewFor=src=>previews['./previews/'+src.split('/').pop()];
 
-// The preview travels with the reader, so even a stalled image request has something to show.
-export default function Painting({src,alt,style,onRetry}){
-  const [status,setStatus]=useState('loading'),[attempt,setAttempt]=useState(0);
+export function ArtworkImage({src,alt,onLoad,onError,...props}){
+  const [useWebp,setUseWebp]=useState(false);
+  const avif=src.replace('art/','art-fast/').replace(/\.webp$/,'.avif');
+  return <picture>
+    {!useWebp?<source type="image/avif" srcSet={avif}/>:null}
+    <img {...props} className="v3-original" src={src} alt={alt} draggable="false" fetchPriority="high"
+      onLoad={event=>onLoad(event.currentTarget)} onError={event=>{
+        if(!useWebp&&event.currentTarget.currentSrc.endsWith('.avif'))setUseWebp(true);
+        else onError();
+      }}/>
+  </picture>;
+}
+
+export default function Painting({src,alt,onArtworkLoad,onArtworkError}){
+  const [status,setStatus]=useState('loading');
+  const [showPreview,setShowPreview]=useState(false);
   const [previewReady,setPreviewReady]=useState(false);
-  const preview=src.replace('art/','art-preview/');
-  return <>
-    <span className="v3-painting" style={style} data-image-status={status}>
-      <img className="v3-preview" src={previewFor(src)} alt="" draggable="false"/>
-      {status!=='ready'?<img className="v3-medium" src={preview} alt="" draggable="false"
-        fetchPriority="high" data-ready={previewReady} onLoad={()=>setPreviewReady(true)}/>:null}
-      <img key={attempt} className="v3-original" src={src} alt={alt} draggable="false"
-        onLoad={()=>setStatus('ready')} onError={()=>setStatus('failed')}/>
-    </span>
-    {onRetry&&status==='failed'?<button className="v3-retry" onClick={()=>{setStatus('loading');setAttempt(n=>n+1);onRetry();}}>当前为预览图 · 重新加载高清原画</button>:null}
-  </>;
+  useEffect(()=>{
+    if(status!=='loading')return;
+    const timeout=setTimeout(()=>setShowPreview(true),1500);
+    return ()=>clearTimeout(timeout);
+  },[status]);
+  return <span className="v3-painting" data-image-status={status}>
+    {status!=='ready'&&(showPreview||status==='failed')?<img className="v3-medium"
+      src={src.replace('art/','art-preview/')} alt="" draggable="false" fetchPriority="low"
+      data-ready={previewReady} onLoad={()=>setPreviewReady(true)}/>:null}
+    <ArtworkImage src={src} alt={alt}
+      onLoad={image=>{setStatus('ready');onArtworkLoad(image);}}
+      onError={()=>{setStatus('failed');onArtworkError();}}/>
+    {status!=='ready'?<span className="v3-art-status" role="status">
+      {status==='failed'?'原画加载失败，可在近观中重试':previewReady?'预览 · 正在加载原画':'正在加载原画…'}
+    </span>:null}
+  </span>;
 }

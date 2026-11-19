@@ -5,44 +5,51 @@ const base=process.env.LUOSHEN_READING_URL||'http://127.0.0.1:5190/';
 const browser=await chromium.launch({channel:'msedge'});
 try{
   for(const width of [1280,390]){
-    const page=await browser.newPage({viewport:{width,height:844},hasTouch:width===390});
+    const page=await browser.newPage({viewport:{width,height:844},hasTouch:width===390,deviceScaleFactor:width===390?3:1});
     const errors=[];
     page.on('pageerror',error=>errors.push(error.message));
     let release;
     const held=new Promise(resolve=>{release=resolve;});
     const stopDownload=async route=>{await held;await route.abort();};
-    const checkPreview=async selector=>{
-      const preview=page.locator(selector+' .v3-preview');
-      await preview.evaluate(img=>img.decode());
-      assert.ok(await preview.evaluate(img=>{
-        const box=img.getBoundingClientRect();
-        return img.src.startsWith('data:image/')&&img.naturalWidth>=300&&box.width>100&&box.height>40&&
-          getComputedStyle(img.closest('.v3-scroll-fallback')||img).opacity==='1';
-      }));
-    };
+    const sceneArt=['**/art-fast/06.avif','**/art/06.webp'];
     try{
-      await page.route('**/art/02.webp',stopDownload);
-      await page.goto(base+'#scene-02',{waitUntil:'domcontentloaded'});
-      await checkPreview('.v3-scroll-fallback');
+      for(const pattern of sceneArt)await page.route(pattern,stopDownload);
+      await page.goto(base+'#scene-06',{waitUntil:'domcontentloaded'});
       const medium=page.locator('.v3-scroll-fallback .v3-medium[data-ready=true]');
       await medium.waitFor();
       assert.equal(await medium.evaluate(img=>img.naturalWidth),1080);
       assert.equal(await medium.evaluate(img=>getComputedStyle(img).opacity),'1');
       await page.getByRole('button',{name:/近观画中细节/}).click();
-      await checkPreview('.v3-zoom-window');
+      const detail=page.locator('.v3-detail-dialog[open]');
+      const detailedArt=detail.locator('.v3-original');
+      const zoomIn=detail.getByRole('button',{name:'放大画卷'});
+      await detail.getByText('正在加载清晰原画…',{exact:true}).waitFor();
+      assert.equal(await detail.locator('img').count(),1);
+      assert.ok(await detailedArt.isHidden());
+      assert.ok(await zoomIn.isDisabled());
       release();
       const retry=page.getByRole('button',{name:/重新加载高清原画/});
       await retry.waitFor();
-      await checkPreview('.v3-zoom-window');
-      await page.unroute('**/art/02.webp',stopDownload);
+      assert.ok(await detailedArt.isHidden());
+      for(const pattern of sceneArt)await page.unroute(pattern,stopDownload);
+      if(width===1280)await page.route(sceneArt[0],route=>route.abort());
       await retry.click();
-      await page.locator('.v3-zoom-window [data-image-status=ready]').waitFor();
-      assert.ok(await page.locator('.v3-zoom-window .v3-original').evaluate(img=>img.naturalWidth>1000));
+      await detailedArt.waitFor();
+      const native=await detailedArt.evaluate(img=>[img.naturalWidth,img.naturalHeight,new URL(img.currentSrc).pathname]);
+      assert.deepEqual(native.slice(0,2),[2075,758]);
+      assert.ok(native[2].endsWith(width===1280?'/art/06.webp':'/art-fast/06.avif'));
+      for(let i=0;i<8&&await zoomIn.isEnabled();i++)await zoomIn.click();
+      assert.ok(await zoomIn.isDisabled());
+      assert.ok(await detailedArt.evaluate(img=>img.getBoundingClientRect().width*devicePixelRatio<=img.naturalWidth+1));
+      await detail.getByRole('button',{name:'回到全卷',exact:true}).click();
+      assert.equal(await detail.locator('.v3-zoom-controls>span').innerText(),'100%');
       await page.getByRole('button',{name:'关闭近观'}).click();
-      await page.getByRole('button',{name:/续卷/}).click();
+      await page.locator('.v3-footer').getByRole('button',{name:/第.*景 停驻洛川/}).click();
       await page.waitForURL(/scene-03$/);
-      await page.waitForFunction(()=>document.querySelector('.v3-scroll-art')?.dataset.status==='ready');
-      await page.waitForFunction(()=>document.querySelector('.v3-scroll-art canvas').dataset.progress==='1.0000');
+      await page.waitForFunction(()=>{
+        const scene=document.querySelector('.v3-app'),art=scene?.querySelector('.v3-scroll-art');
+        return scene?.dataset.scene==='3'&&art?.dataset.status==='ready'&&art.dataset.flat==='true';
+      });
       const original=page.locator('.v3-scroll-fallback .v3-original');
       assert.ok(await original.evaluate(img=>{
         const box=img.getBoundingClientRect();

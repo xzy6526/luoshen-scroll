@@ -3,17 +3,21 @@ import { unfoldPoint } from './scroll-geometry.mjs';
 import Painting,{previewFor} from './Painting.jsx';
 
 export default function ScrollArtwork({src,alt,duration=1.7,paused=false,reduced=false,opening=false,view,onRect,onOpened}){
-  const root=useRef(null),canvas=useRef(null),controls=useRef(null),rendererRef=useRef(null);
+  const root=useRef(null),canvas=useRef(null),controls=useRef(null),rendererRef=useRef(null),startedAt=useRef(0);
   const latest=useRef({paused,reduced,view,onRect,onOpened});latest.current={paused,reduced,view,onRect,onOpened};
-  const [result,setResult]=useState(null);
-  const status=result?.src===src?result.status:'loading';
+  const [result,setResult]=useState(null),[loadedArtwork,setLoadedArtwork]=useState(null);
+  const currentFrame=result?.image===loadedArtwork?.image&&result?.image?.isConnected;
+  const status=result?.src===src&&(result.status!=='ready'||currentFrame)?result.status:'loading';
+  useEffect(()=>{startedAt.current=performance.now();},[src]);
   useEffect(()=>{controls.current?.update();},[paused,reduced,view]);
   useEffect(()=>{
-    const host=root.current,el=canvas.current,started=performance.now();
-    const setStatus=status=>setResult({src,status});
+    const art=loadedArtwork?.src===src?loadedArtwork.image:null;
+    if(!art?.isConnected)return;
+    const host=root.current,el=canvas.current,started=startedAt.current;
+    const setStatus=status=>setResult({src,status,image:art});
     el.dataset.progress='0';el.dataset.frame='0';host.dataset.flat='false';
     const touchScreen=matchMedia('(pointer: coarse)').matches;
-    let alive=true,renderer,scene,camera,picture,imageMap,planes,rollers,light,resize,visibility,frame=0,age=0,last=0,complete=false,visible=true,aspect=2.74,half=1.6,ready=false,presented=false;
+    let alive=true,renderer,scene,camera,picture,imageMap,planes,rollers,light,resize,visibility,frame=0,age=0,last=0,complete=false,visible=true,aspect=2.74,half=1.6,ready=false,presented=false,lastView=null;
     const disposable=new Set(),surfaces=[],mounts=[];
     const own=value=>{disposable.add(value);return value;};
     const stop=()=>{cancelAnimationFrame(frame);frame=0;last=0;el.dataset.running='false';};
@@ -35,18 +39,25 @@ export default function ScrollArtwork({src,alt,duration=1.7,paused=false,reduced
       if(progress===1){host.dataset.flat='true';notify();}
     }
     function applyView(){
-      if(!imageMap)return;
-      const {zoom=1,x=.5,y=.5}=latest.current.view||{},span=1/zoom;
+      if(!imageMap||lastView===latest.current.view)return false;
+      lastView=latest.current.view;
+      const {zoom=1,x=.5,y=.5}=lastView||{},span=1/zoom;
       imageMap.repeat.set(span,span);imageMap.offset.set(Math.max(0,Math.min(1-span,x-span/2)),Math.max(0,Math.min(1-span,1-y-span/2)));
       el.dataset.zoom=String(zoom);
+      return true;
     }
     function render(){
       renderer.render(scene,camera);el.dataset.frame=String(Number(el.dataset.frame||0)+1);
     }
     function update(){
       if(!ready||!alive)return;
-      applyView();
-      if(latest.current.paused||latest.current.reduced){age=duration;paper(1);render();stop();return;}
+      const viewChanged=applyView();
+      if(latest.current.paused||latest.current.reduced){
+        if(age<duration){age=duration;paper(1);render();}
+        else if(viewChanged)render();
+        stop();return;
+      }
+      if(age>=duration&&!viewChanged)return;
       if(!frame&&visible&&!document.hidden)frame=requestAnimationFrame(draw);
     }
     function draw(now){
@@ -61,8 +72,7 @@ export default function ScrollArtwork({src,alt,duration=1.7,paused=false,reduced
     const lost=event=>{event.preventDefault();stop();if(alive){ready=false;setStatus('fallback');latest.current.onOpened?.();}};
     async function start(){
       try{
-        const art=new Image();art.src=src;
-        const [T]=await Promise.all([import('three'),art.decode()]);
+        const T=await import('three');
         if(!alive)return;
         const frameMap=await new T.TextureLoader().loadAsync('v3/frame-source.webp');
         if(!alive){frameMap.dispose();return;}
@@ -72,7 +82,8 @@ export default function ScrollArtwork({src,alt,duration=1.7,paused=false,reduced
         renderer=rendererRef.current??=new T.WebGLRenderer({canvas:el,context:gl,alpha:true,antialias:true});
         renderer.setPixelRatio(Math.min(devicePixelRatio,touchScreen?1.25:1.5));renderer.outputColorSpace=T.SRGBColorSpace;
         renderer.localClippingEnabled=true;
-        imageMap=own(new T.Texture(art));imageMap.needsUpdate=true;
+        // The same decoded image feeds both the browser layer and the unfolding canvas.
+        imageMap=own(new T.Texture(art));imageMap.generateMipmaps=false;imageMap.minFilter=T.LinearFilter;imageMap.needsUpdate=true;
         imageMap.colorSpace=frameMap.colorSpace=T.SRGBColorSpace;
         aspect=art.naturalWidth/art.naturalHeight;el.dataset.artAspect=String(aspect);half=aspect/2+.21;
         scene=new T.Scene();camera=new T.OrthographicCamera(-2,2,1,-1,.1,30);camera.position.set(0,0,8);camera.lookAt(0,0,0);
@@ -129,11 +140,15 @@ export default function ScrollArtwork({src,alt,duration=1.7,paused=false,reduced
     }
     start();
     return()=>{alive=false;stop();controls.current=null;resize?.disconnect();visibility?.disconnect();document.removeEventListener('visibilitychange',changed);el.removeEventListener('webglcontextlost',lost);for(const item of disposable)item.dispose();renderer?.renderLists.dispose();};
-  },[src,duration]);
+  },[src,duration,loadedArtwork]);
   // The reader keeps one graphics context while the paintings and their scene resources change.
   useEffect(()=>()=>{const renderer=rendererRef.current;renderer?.dispose();renderer?.forceContextLoss();rendererRef.current=null;},[]);
   return <div ref={root} className={`v3-scroll-art ${opening?'v3-scroll-art--opening':''}`} data-status={status} data-zoomed={(view?.zoom??1)>1}>
-    <div className="v3-scroll-fallback"><img className="v3-fallback-frame" src={previewFor('frame.webp')} alt=""/><Painting key={src} src={src} alt={alt}/></div>
+    <div className="v3-scroll-fallback"><img className="v3-fallback-frame" src={previewFor('frame.webp')} alt=""/>
+      <Painting key={src} src={src} alt={alt}
+        onArtworkLoad={image=>setLoadedArtwork({src,image})}
+        onArtworkError={()=>{setResult({src,status:'fallback'});latest.current.onOpened?.();}}/>
+    </div>
     <canvas ref={canvas} aria-hidden="true" data-progress="0" data-frame="0" data-running="false"/>
   </div>;
 }

@@ -15,7 +15,7 @@ export default function DepthArtwork({ src, id, paused, mode, silk=false, design
     const fold=silk?sceneFolds[id-1]:null;
     let alive=true, visible=true, lost=false, raf=0, renderer, geometry, material, texture, previousTexture, effectsTexture, edgeTexture, fogTexture, resize, observer, context;
     const atmosphere=[];
-    let age=0, last=0, painted=0, frame=0, ready=false,foldFinished=false;
+    let age=0, last=0, painted=0, frame=0, ready=false,foldFinished=false,effectFrame;
     const target={x:0,y:0}, pointer={x:0,y:0};
     const enabled=()=>alive && ready && visible && !document.hidden && !pausedRef.current && !lost;
     const stop=()=>{cancelAnimationFrame(raf);raf=0;last=0;el.dataset.running='false';};
@@ -65,7 +65,10 @@ export default function DepthArtwork({ src, id, paused, mode, silk=false, design
         camera.position.y=(-pointer.y*.025+Math.cos(age*.28)*.004)*amount;
         camera.position.z=2.05+entrance*.27;camera.lookAt(0,0,0);mesh.rotation.y=entrance*-.055;
       }
-      if(effectsTexture)effectsTexture.needsUpdate=true;
+      const nextEffectFrame=effectsTexture.image.dataset.frame;
+      if(effectFrame!==nextEffectFrame){
+        effectFrame=nextEffectFrame;effectsTexture.needsUpdate=true;
+      }
       renderer.render(scene,camera);
       el.dataset.frame=String(++frame);el.dataset.running='true';el.dataset.active='true';
       if(restingRef.current)stop();else raf=requestAnimationFrame(draw);
@@ -99,6 +102,7 @@ export default function DepthArtwork({ src, id, paused, mode, silk=false, design
         }
         geometry.computeVertexNormals();
         effectsTexture=new T.CanvasTexture(host.querySelector('.art-effects'));
+        effectsTexture.generateMipmaps=false;effectsTexture.minFilter=T.LinearFilter;
         effectsTexture.colorSpace=T.SRGBColorSpace;
         if(silk){
           const loader=new T.TextureLoader();

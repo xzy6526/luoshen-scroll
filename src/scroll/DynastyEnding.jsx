@@ -5,6 +5,8 @@ import './dynasty-ending.css';
 import {previewFor} from './Painting.jsx';
 
 const fullText=preface+chapters.flatMap(c=>c.paragraphs).join('');
+const characters=[...new Set(fullText)];
+const atlasColumns=Math.ceil(Math.sqrt(characters.length));
 const roofs=[
   {id:'ink',label:'淡墨飞檐',width:101.306,left:-.653,bottom:66.575},
   {id:'silk',label:'青灰绢绘',width:101.07,left:-.605,bottom:66.299},
@@ -18,16 +20,19 @@ function CharacterCurtain({paused,reduced,visible,roof}){
     if(!visible)return;
     const el=canvas.current,box=stage.current,ctx=el.getContext('2d');
     if(!ctx)return;
-    let points=[],links=[],glyphs=new Map(),width=0,height=0,dpr=1,size=12,frame=0,last=0,lastInput=0,draws=0,grab=null,pointer=null,onscreen=true;
+    const atlas=document.createElement('canvas'),glyphContext=atlas.getContext('2d'),glyphs=new Map();
+    let points=[],links=[],cell=0,width=0,height=0,dpr=1,size=12,frame=0,last=0,lastInput=0,draws=0,grab=null,pointer=null,onscreen=true;
     const draw=()=>{
       ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,height);
+      let maxDistanceSq=0;
       for(const p of points){
-        const next=points[p.next],angle=next?Math.atan2(next.y-p.y,next.x-p.x)-Math.PI/2:0,g=glyphs.get(p.char);
+        const next=points[p.next],angle=next?Math.atan2(next.y-p.y,next.x-p.x)-Math.PI/2:0;
         ctx.setTransform(dpr*Math.cos(angle),dpr*Math.sin(angle),-dpr*Math.sin(angle),dpr*Math.cos(angle),p.x*dpr,p.y*dpr);
-        ctx.drawImage(g,-size*.8,-size*.8,size*1.6,size*1.6);
+        ctx.drawImage(atlas,p.glyph.x,p.glyph.y,cell,cell,-size*.8,-size*.8,size*1.6,size*1.6);
+        maxDistanceSq=Math.max(maxDistanceSq,(p.x-p.homeX)**2+(p.y-p.homeY)**2);
       }
       el.dataset.frame=String(++draws);
-      el.dataset.displacement=Math.max(0,...points.map(p=>Math.hypot(p.x-p.homeX,p.y-p.homeY))).toFixed(2);
+      el.dataset.displacement=Math.sqrt(maxDistanceSq).toFixed(2);
     };
     const stop=()=>{cancelAnimationFrame(frame);frame=0;last=0;el.dataset.motion='idle';};
     const wake=()=>{
@@ -58,22 +63,26 @@ function CharacterCurtain({paused,reduced,visible,roof}){
       if(grab||now-lastInput<80||movement>.06&&now-lastInput<1200)frame=requestAnimationFrame(tick);else stop();
     };
     const resize=()=>{
-      stop();release();
-      width=box.clientWidth;if(!width)return;
+      const nextWidth=box.clientWidth,nextDpr=Math.min(devicePixelRatio||1,2);
+      if(!nextWidth||(width===nextWidth&&dpr===nextDpr))return;
+      stop();release();width=nextWidth;dpr=nextDpr;
       size=width<420?17:width<700?19:21;
       const columns=Math.max(9,Math.floor(width*.84/(size*1.28))),rows=Math.ceil(fullText.length/columns),area=width*.84,dx=area/(columns-1),eave=width*.16,top=eave+size*.75,dy=size*1.25;
       height=Math.ceil(top+(rows-1)*dy+size*2);box.style.height=`${height}px`;box.style.setProperty('--roof-baseline',`${eave}px`);
-      dpr=Math.min(devicePixelRatio||1,2);el.width=Math.round(width*dpr);el.height=Math.round(height*dpr);
-      points=[];links=[];glyphs=new Map();el.dataset.fontSize=String(size);
+      el.width=Math.round(width*dpr);el.height=Math.round(height*dpr);
+      points=[];links=[];el.dataset.fontSize=String(size);
+      cell=Math.ceil(size*1.6*dpr);atlas.width=atlasColumns*cell;atlas.height=Math.ceil(characters.length/atlasColumns)*cell;
+      glyphContext.font=`500 ${size*dpr}px KaiTi, STKaiti, SimSun, serif`;glyphContext.fillStyle='#354d49';
+      glyphContext.textAlign='center';glyphContext.textBaseline='middle';
+      characters.forEach((char,index)=>{
+        const x=index%atlasColumns*cell,y=Math.floor(index/atlasColumns)*cell;
+        glyphContext.fillText(char,x+cell/2,y+cell/2);glyphs.set(char,{x,y});
+      });
       for(let col=0;col<columns;col++)for(let row=0;row<rows;row++){
         const char=fullText[col*rows+row];if(!char)continue;
         const x=(width+area)/2-col*dx,y=top+row*dy;
-        points.push({char,x,y,homeX:x,homeY:y,vx:0,vy:0,pinned:row===0,next:row<rows-1&&col*rows+row+1<fullText.length?points.length+1:null});
+        points.push({glyph:glyphs.get(char),x,y,homeX:x,homeY:y,vx:0,vy:0,pinned:row===0,next:row<rows-1&&col*rows+row+1<fullText.length?points.length+1:null});
         if(row)links.push([points[points.length-2],points[points.length-1],dy]);
-        if(!glyphs.has(char)){
-          const glyph=document.createElement('canvas'),s=Math.ceil(size*1.6*dpr);glyph.width=s;glyph.height=s;
-          const g=glyph.getContext('2d');g.font=`500 ${size*dpr}px KaiTi, STKaiti, SimSun, serif`;g.fillStyle='#354d49';g.textAlign='center';g.textBaseline='middle';g.fillText(char,s/2,s/2);glyphs.set(char,glyph);
-        }
       }
       el.dataset.characters=String(points.length);draw();
     };

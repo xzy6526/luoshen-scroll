@@ -38,6 +38,28 @@ try{
       await page.getByRole('button',{name:/续卷/}).click();
       await page.waitForURL(/scene-03$/);
       await page.waitForFunction(()=>document.querySelector('.v3-scroll-art')?.dataset.status==='ready');
+      await page.waitForFunction(()=>document.querySelector('.v3-scroll-art canvas').dataset.progress==='1.0000');
+      const colorDifference=await page.evaluate(()=>{
+        const frame=document.querySelector('.v3-scroll-art canvas'),art=document.querySelector('.v3-original');
+        const aspect=art.naturalWidth/art.naturalHeight;
+        const worldWidth=Math.max(aspect+.78,1.72*frame.clientWidth/frame.clientHeight);
+        const pixelsPerUnit=frame.width/worldWidth;
+        const tile=document.createElement('canvas');tile.width=64;tile.height=24;
+        const ctx=tile.getContext('2d',{willReadFrequently:true});
+        ctx.drawImage(art,0,0,64,24);
+        const expected=ctx.getImageData(0,0,64,24).data;
+        ctx.clearRect(0,0,64,24);
+        ctx.drawImage(frame,(frame.width-aspect*pixelsPerUnit)/2,(frame.height-pixelsPerUnit)/2,
+          aspect*pixelsPerUnit,pixelsPerUnit,0,0,64,24);
+        const actual=ctx.getImageData(0,0,64,24).data;
+        return actual.reduce((sum,value,i)=>sum+Math.abs(value-expected[i]),0)/actual.length;
+      });
+      assert.ok(colorDifference<10,'rendered painting must match the full original: '+colorDifference);
+      const canvas=await page.locator('.v3-scroll-art canvas').elementHandle();
+      await page.getByRole('button',{name:/续卷/}).click();
+      await page.waitForURL(/scene-04$/);
+      await page.waitForFunction(()=>document.querySelector('.v3-app').dataset.scene==='4'&&document.querySelector('.v3-scroll-art').dataset.status==='ready');
+      assert.ok(await canvas.evaluate(el=>el===document.querySelector('.v3-scroll-art canvas')&&!el.getContext('webgl2').isContextLost()));
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
       assert.deepEqual(errors,[]);
       console.log('PASS '+width+'px: delayed image, failed image, detail retry and next scene');

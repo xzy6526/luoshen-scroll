@@ -19,7 +19,7 @@ export default function ArtEffects({ id, paused, pulse }) {
     const el=canvas.current,ctx=el.getContext('2d',{willReadFrequently:true});
     const running=!paused&&visible&&!hidden&&masks.length>0;
     el.dataset.running=String(running);
-    if(!running){ctx.clearRect(0,0,el.width,el.height);return;}
+    if(!running){ctx.clearRect(0,0,el.width,el.height);el.dataset.frame=String(Number(el.dataset.frame||0)+1);return;}
     const layer=document.createElement('canvas');layer.width=el.width;layer.height=el.height;
     const draw=layer.getContext('2d',{willReadFrequently:true});
     let frame=0,last=0,painted=0;

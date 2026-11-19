@@ -1,13 +1,14 @@
 import React,{useEffect,useRef,useState} from 'react';
 import { unfoldPoint } from './scroll-geometry.mjs';
+import Painting,{previewFor} from './Painting.jsx';
 
 export default function ScrollArtwork({src,alt,duration=1.7,paused=false,reduced=false,opening=false,view,onRect,onOpened}){
-  const root=useRef(null),canvas=useRef(null),controls=useRef(null);
+  const root=useRef(null),canvas=useRef(null),controls=useRef(null),original=useRef(null);
   const latest=useRef({paused,reduced,view,onRect,onOpened});latest.current={paused,reduced,view,onRect,onOpened};
   const [status,setStatus]=useState('loading');
   useEffect(()=>{controls.current?.update();},[paused,reduced,view]);
   useEffect(()=>{
-    const host=root.current,el=canvas.current;
+    const host=root.current,el=canvas.current,started=performance.now();
     let alive=true,renderer,scene,camera,picture,imageMap,planes,rollers,light,resize,visibility,frame=0,age=0,last=0,painted=0,complete=false,visible=true,aspect=2.74,half=1.6,ready=false,lastMove=0;
     const disposable=new Set(),surfaces=[],mounts=[],pointer={x:0,y:0};
     const own=value=>{disposable.add(value);return value;};
@@ -68,9 +69,13 @@ export default function ScrollArtwork({src,alt,duration=1.7,paused=false,reduced
         renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=T.SRGBColorSpace;
         renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.localClippingEnabled=true;
         const loader=new T.TextureLoader();
-        const loaded=await Promise.all([loader.loadAsync(src),loader.loadAsync('v3/frame-source.png')]);
-        loaded.forEach(own);if(!alive){loaded.forEach(t=>t.dispose());return;}
-        [imageMap]=loaded;const frameMap=loaded[1];
+        const art=original.current;
+        const [frameMap]=await Promise.all([loader.loadAsync('v3/frame-source.webp').then(texture=>{
+          if(alive)own(texture);else texture.dispose();
+          return texture;
+        }),art.decode()]);
+        if(!alive)return;
+        imageMap=own(new T.Texture(art));imageMap.needsUpdate=true;
         imageMap.colorSpace=frameMap.colorSpace=T.SRGBColorSpace;
         aspect=imageMap.image.width/imageMap.image.height;half=aspect/2+.21;
         scene=new T.Scene();camera=new T.OrthographicCamera(-2,2,1,-1,.1,30);camera.position.set(0,0,8);camera.lookAt(0,0,0);
@@ -117,8 +122,8 @@ export default function ScrollArtwork({src,alt,duration=1.7,paused=false,reduced
         });resize.observe(host);
         visibility=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;if(visible)update();else stop();});visibility.observe(host);
         ready=true;el.dataset.engine=`three.js r${T.REVISION}`;el.dataset.parts='silk,painting,wood-rollers,bronze-caps,mounting,shadow';
-        age=latest.current.reduced||latest.current.paused?duration:0;paper(age/duration);applyView();
-        setStatus('ready');update();
+        age=latest.current.reduced||latest.current.paused||performance.now()-started>1500?duration:0;paper(age/duration);applyView();
+        render();setStatus('ready');update();
         host.addEventListener('pointermove',pointerMove,{passive:true});document.addEventListener('visibilitychange',changed);el.addEventListener('webglcontextlost',lost);
         controls.current={update};
       }catch{
@@ -129,8 +134,7 @@ export default function ScrollArtwork({src,alt,duration=1.7,paused=false,reduced
     return()=>{alive=false;stop();controls.current=null;resize?.disconnect();visibility?.disconnect();host.removeEventListener('pointermove',pointerMove);document.removeEventListener('visibilitychange',changed);el.removeEventListener('webglcontextlost',lost);for(const item of disposable)item.dispose();renderer?.dispose();renderer?.forceContextLoss();};
   },[src,duration]);
   return <div ref={root} className={`v3-scroll-art ${opening?'v3-scroll-art--opening':''}`} data-status={status}>
-    <div className="v3-scroll-fallback"><img className="v3-fallback-frame" src="v3/frame-source.png" alt=""/><img className="v3-original" src={src} alt={alt} draggable="false"/></div>
+    <div className="v3-scroll-fallback"><img className="v3-fallback-frame" src={previewFor('frame.webp')} alt=""/><Painting key={src} src={src} alt={alt} imageRef={original}/></div>
     <canvas ref={canvas} aria-hidden="true" data-progress="0" data-frame="0" data-running="false"/>
-    {status==='loading'?<span className="v3-loading" role="status">展卷中</span>:null}
   </div>;
 }

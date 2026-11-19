@@ -2,6 +2,7 @@ import React,{useEffect,useRef,useState} from 'react';
 import {chapters,preface} from '../content.mjs';
 import ToolbarAction from './ToolbarAction.jsx';
 import './dynasty-ending.css';
+import {previewFor} from './Painting.jsx';
 
 const fullText=preface+chapters.flatMap(c=>c.paragraphs).join('');
 const roofs=[
@@ -102,7 +103,8 @@ function CharacterCurtain({paused,reduced,visible,roof}){
     document.addEventListener('visibilitychange',visibility);control.current={stop,wake};resize();
     return()=>{stop();release();observer.disconnect();intersection.disconnect();document.removeEventListener('visibilitychange',visibility);el.removeEventListener('pointermove',move);el.removeEventListener('pointerdown',down);el.removeEventListener('pointerup',release);el.removeEventListener('pointercancel',release);el.removeEventListener('lostpointercapture',release);el.removeEventListener('pointerleave',leave);control.current=null;};
   },[reduced,visible]);
-  return <div ref={stage} className="dynasty-stage"><img key={roof.id} className="dynasty-roof" src={`dynasty/roof-${roof.id}.png`} style={{width:`${roof.width}%`,left:`${roof.left}%`,transform:`translateY(-${roof.bottom}%)`}} alt="" draggable="false" onError={e=>{e.currentTarget.hidden=true;}}/><canvas ref={canvas} className="dynasty-canvas" aria-hidden="true"/></div>;
+  const roofFile=`roof-${roof.id}.webp`;
+  return <div ref={stage} className="dynasty-stage"><img key={roof.id} className="dynasty-roof" width="2172" height="724" src={`dynasty/${roofFile}`} style={{backgroundImage:`url(${previewFor(roofFile)})`,backgroundSize:'100% 100%',width:`${roof.width}%`,left:`${roof.left}%`,transform:`translateY(-${roof.bottom}%)`}} alt="" draggable="false" onLoad={e=>{e.currentTarget.style.backgroundImage='none';}} onError={e=>{e.currentTarget.src=previewFor(roofFile);}}/><canvas ref={canvas} className="dynasty-canvas" aria-hidden="true"/></div>;
 }
 
 export default function DynastyEnding({paused,reduced}){

@@ -2,7 +2,7 @@
 .v3-app[data-layout=dynasty] .v3-header { border-bottom-color:#8d8f761c; }
 .dynasty-ending { position:relative;isolation:isolate;min-height:calc(100svh - 104px);padding:26px 56px 125px; }
 .dynasty-landscape { position:fixed;inset:0;z-index:-1;pointer-events:none;overflow:hidden;background:radial-gradient(ellipse at 20% 8%,#f5e5c76b,transparent 45%),linear-gradient(160deg,#f7f1e6dc,#edf2e9c9 65%,#d5e7e1bb); }
-.dynasty-distant-mountains { position:absolute;inset:18% -7% -8%;background:url('/v3/background-rich.png') 50% 100%/300% 200%;filter:saturate(.35);opacity:.37;mask-image:linear-gradient(transparent 12%,#0009 62%,#000); }
+.dynasty-distant-mountains { position:absolute;inset:18% -7% -8%;background:url('/v3/background-rich.webp') 50% 100%/300% 200%;filter:saturate(.35);opacity:.37;mask-image:linear-gradient(transparent 12%,#0009 62%,#000); }
 .dynasty-water-wash { position:absolute;inset:55% -20% -30%;background:radial-gradient(ellipse at 50% 15%,#f3f5e9b3,transparent 58%),repeating-radial-gradient(ellipse at 45% 20%,transparent 0 52px,#6c9f9321 54px,transparent 56px 81px);transform:scaleY(.58);opacity:.55; }
 .dynasty-landscape svg { position:absolute;inset:0;width:100%;height:100%;color:#64928a;opacity:.28; }
 .dynasty-topline { display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:20px;max-width:1650px;margin:0 auto 32px;font-size:11px;letter-spacing:.2em;color:#697c70; }

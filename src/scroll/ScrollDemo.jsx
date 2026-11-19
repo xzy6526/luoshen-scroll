@@ -2,6 +2,7 @@ import React,{useEffect,useRef,useState} from 'react';
 import { chapters,preface } from '../content.mjs';
 import { demoScenes,sampleIds,sceneFor,atlasPosition } from './scene-config.mjs';
 import ScrollArtwork from './ScrollArtwork.jsx';
+import Painting,{previewFor} from './Painting.jsx';
 import ToolbarAction from './ToolbarAction.jsx';
 import DynastyEnding from './DynastyEnding.jsx';
 import './scroll-demo.css';
@@ -67,13 +68,13 @@ function ReadingPane({chapter,design,onReading,onPhase,onReplay,onFullText,onVie
   </aside>;
 }
 
-function DetailDialog({chapter,dialog,close}){
+function DetailDialog({chapter,dialog,close,active,onRetry}){
   const [zoom,setZoom]=useState(1),windowRef=useRef(null);
   useEffect(()=>{setZoom(1);},[chapter.id]);
   return <dialog ref={dialog} className="v3-detail-dialog" aria-labelledby="v3-detail-title" onClose={close} onClick={e=>{if(e.target===e.currentTarget)e.currentTarget.close();}}>
     <div className="v3-dialog-header"><div><span>完整原画 · 可滚动与缩放</span><h2 id="v3-detail-title">{chapter.title}</h2></div><button aria-label="关闭近观" onClick={()=>dialog.current.close()}>关闭 ×</button></div>
     <div className="v3-zoom-controls"><button aria-label="缩小画卷" disabled={zoom<=1} onClick={()=>setZoom(v=>Math.max(1,v-.5))}>−</button><span>{Math.round(zoom*100)}%</span><button aria-label="放大画卷" disabled={zoom>=4} onClick={()=>setZoom(v=>Math.min(4,v+.5))}>＋</button><button onClick={()=>{setZoom(1);windowRef.current?.scrollTo(0,0);}}>回到全卷</button></div>
-    <div ref={windowRef} className="v3-zoom-window" tabIndex="0" aria-label="原画近观区域"><img src={chapter.image} alt={`${chapter.title}完整原画`} draggable="false" style={{width:`${zoom*100}%`}}/></div>
+    <div ref={windowRef} className="v3-zoom-window" tabIndex="0" aria-label="原画近观区域">{active?<Painting key={chapter.id} src={chapter.image} alt={`${chapter.title}完整原画`} style={{width:`${zoom*100}%`}} onRetry={onRetry}/>:null}</div>
     <p className="v3-source-note">此处显示原始画幅，未裁去人物与景物。</p>
   </dialog>;
 }
@@ -81,7 +82,7 @@ function DetailDialog({chapter,dialog,close}){
 export default function ScrollDemo(){
   const [page,setPage]=useState(readPage),[paused,setPaused]=useState(false),[reading,setReading]=useState(false),[resting,setResting]=useState(false),[opened,setOpened]=useState(false),[dialog,setDialog]=useState(null),[fullscreen,setFullscreen]=useState(false),[phase,setPhase]=useState('night');
   const root=useRef(null),directory=useRef(null),detail=useRef(null),prefaceDialog=useRef(null),gallery=useRef(null),opener=useRef(null),timer=useRef(null),rest=useRef(false),touch=useRef(null);
-  const [view,setView]=useState();
+  const [view,setView]=useState(),[artAttempt,setArtAttempt]=useState(0);
   const reduced=useReduced(),fullText=page===15,chapter=chapters[(Math.min(page,14)||1)-1],design=sceneFor(Math.min(page,14)||1);
   const still=paused||reduced||reading||resting||Boolean(dialog);
   const navigate=id=>{if(id===readPage())return;location.hash=id===15?'full-text':id?`scene-${String(id).padStart(2,'0')}`:'';};
@@ -112,14 +113,14 @@ export default function ScrollDemo(){
     <header className="v3-header"><button className="v3-brand" onClick={()=>navigate(0)} aria-label="洛神赋，返回卷首"><span className="v3-seal">洛<br/>水</span>洛神赋</button><nav className="v3-toolbar" aria-label="观卷工具"><ToolbarAction reduced={reduced} icon={paused||reduced?'play':'pause'} aria-pressed={paused||reduced} disabled={reduced} title={reduced?'系统已启用减少动态':paused?'恢复环境微动':'暂停环境微动'} onClick={()=>setPaused(v=>!v)}>{reduced?'静观中':'静观'}</ToolbarAction><ToolbarAction reduced={reduced} icon="book" aria-haspopup="dialog" aria-expanded={dialog==='preface'} aria-controls="v3-preface-dialog" onClick={e=>show('preface',e)}>卷前序</ToolbarAction><ToolbarAction reduced={reduced} icon="fold" className="v3-tool--fold" href={`?edition=story${page?'#scene-'+String(Math.min(page,14)).padStart(2,'0'):''}`}>折页风格</ToolbarAction><ToolbarAction reduced={reduced} icon="directory" className="v3-tool--directory" aria-haspopup="dialog" aria-expanded={dialog==='directory'} aria-controls="v3-directory-dialog" onClick={e=>show('directory',e)}>目录</ToolbarAction></nav></header>
     {fullText?<DynastyEnding paused={paused||Boolean(dialog)} reduced={reduced}/>:!page?<main className="v3-opening" data-opened={opened}><h1 className="v3-opening-theme">曹植《洛神赋》<span>沉浸式图文长卷</span></h1><ScrollArtwork key="cover" src="art/cover.webp" alt="洛神赋原始封面，金色题字与青绿山水" duration={2.8} paused={paused||Boolean(dialog)} reduced={reduced} opening onOpened={()=>setOpened(true)}/><div className="v3-opening-actions"><p>一卷洛水，十四境。</p><button id="v3-enter" onClick={()=>navigate(1)}>展卷入境 <span>→</span></button><span>黄初三年 · 曹植</span></div></main>:<main className="v3-scene" key={page}>
       <div className="v3-scene-art"><figure ref={gallery} className="v3-gallery" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} onTouchCancel={()=>{touch.current=null;}}>
-        <ScrollArtwork key={page} src={chapter.image} alt={`第${numerals[page]}景 ${chapter.title}，完整原画`} duration={design.duration} paused={paused||Boolean(dialog)||resting} reduced={reduced} view={view}/>
+        <ScrollArtwork key={`${page}-${artAttempt}`} src={chapter.image} alt={`第${numerals[page]}景 ${chapter.title}，完整原画`} duration={design.duration} paused={paused||Boolean(dialog)||resting} reduced={reduced} view={view}/>
         <figcaption><span>第{numerals[page]}景 · 绢本画卷</span><div><button onClick={e=>show('detail',e)}>近观画中细节 <span aria-hidden="true">↗</span></button><button onClick={full}>{fullscreen?'退出全屏':'全屏赏画'}</button></div></figcaption>
       </figure></div>
       <div id="v3-reading" className="v3-reading-anchor" tabIndex="-1"><ReadingPane chapter={chapter} design={design} onReading={setReading} onPhase={setPhase} onReplay={()=>navigate(0)} onFullText={()=>navigate(15)} onView={setView}/></div>
     </main>}
     {fullText?<footer className="v3-footer v3-dynasty-footer"><button onClick={()=>navigate(14)}><span aria-hidden="true">← </span>返回第十四景</button><p>洛水长流 · 赋意长存</p><button onClick={()=>navigate(0)}>重展此卷 <span aria-hidden="true">→</span></button></footer>:page?<footer className="v3-footer"><button onClick={()=>step(-1)}>← <span>{page===1?'卷首':'前卷'}</span></button><nav aria-label="十四景卷轴导航">{demoScenes.map(s=><button key={s.id} aria-current={page===s.id?'page':undefined} aria-label={`第${numerals[s.id]}景 ${chapters[s.id-1].title}`} onClick={()=>navigate(s.id)}><span className="v3-node-index">{String(s.id).padStart(2,'0')}</span><span className="v3-node-title">{chapters[s.id-1].title}</span><i/></button>)}</nav><button onClick={()=>step(1)}><span>{page===14?'全文终章':'续卷'}</span><span aria-hidden="true"> →</span></button></footer>:null}
-    <dialog ref={directory} id="v3-directory-dialog" className="v3-directory" aria-labelledby="v3-directory-title" onClose={close} onClick={e=>{if(e.target===e.currentTarget)e.currentTarget.close();}}><div className="v3-dialog-header"><div><span>一卷洛水 · 十四境</span><h2 id="v3-directory-title">循卷入境</h2></div><button aria-label="关闭目录" onClick={()=>directory.current.close()}>关闭 ×</button></div><div className="v3-directory-list">{demoScenes.map(s=><button key={s.id} onClick={()=>{opener.current=null;directory.current.close();navigate(s.id);}}><span>{String(s.id).padStart(2,'0')}</span><img src={`thumbs/${String(s.id).padStart(2,'0')}.webp`} alt=""/><div><strong>{chapters[s.id-1].title}</strong><small>{chapters[s.id-1].mood}</small></div><span>↗</span></button>)}</div><button className="v3-dynasty-directory" aria-label="洛神赋全文 · 檐下拨墨" onClick={()=>{opener.current=null;directory.current.close();navigate(15);}}><span>洛神赋全文<small>檐下拨墨 · 卷后静读</small></span><span aria-hidden="true">→</span></button><a className="v3-complete-link" href="?edition=story">查看旧版阅读布局 →</a></dialog>
+    <dialog ref={directory} id="v3-directory-dialog" className="v3-directory" aria-labelledby="v3-directory-title" onClose={close} onClick={e=>{if(e.target===e.currentTarget)e.currentTarget.close();}}><div className="v3-dialog-header"><div><span>一卷洛水 · 十四境</span><h2 id="v3-directory-title">循卷入境</h2></div><button aria-label="关闭目录" onClick={()=>directory.current.close()}>关闭 ×</button></div><div className="v3-directory-list">{demoScenes.map(s=><button key={s.id} onClick={()=>{opener.current=null;directory.current.close();navigate(s.id);}}><span>{String(s.id).padStart(2,'0')}</span><img src={previewFor(chapters[s.id-1].image)} alt=""/><div><strong>{chapters[s.id-1].title}</strong><small>{chapters[s.id-1].mood}</small></div><span>↗</span></button>)}</div><button className="v3-dynasty-directory" aria-label="洛神赋全文 · 檐下拨墨" onClick={()=>{opener.current=null;directory.current.close();navigate(15);}}><span>洛神赋全文<small>檐下拨墨 · 卷后静读</small></span><span aria-hidden="true">→</span></button><a className="v3-complete-link" href="?edition=story">查看旧版阅读布局 →</a></dialog>
     <dialog ref={prefaceDialog} id="v3-preface-dialog" className="v3-preface v3-directory" aria-labelledby="v3-preface-title" onClose={close} onClick={e=>{if(e.target===e.currentTarget)e.currentTarget.close();}}><div className="v3-dialog-header"><div><span>曹植 · 黄初三年</span><h2 id="v3-preface-title">洛神赋 · 序</h2></div><button aria-label="关闭序文" onClick={()=>prefaceDialog.current.close()}>关闭 ×</button></div><p data-preface>{preface}</p><button className="v3-preface-enter" onClick={()=>{opener.current=null;prefaceDialog.current.close();navigate(1);}}>从第一景启程 →</button></dialog>
-    <DetailDialog chapter={chapter} dialog={detail} close={close}/>
+    <DetailDialog onRetry={()=>setArtAttempt(n=>n+1)} active={dialog==='detail'} chapter={chapter} dialog={detail} close={close}/>
   </div>;
 }
